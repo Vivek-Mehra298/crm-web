@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchLeads , createLead, deleteLead, updateLead } from "../api/leads";
-import { type Lead } from "../Types/leadsType";
+
 
 export const useLeads =()=>{
     return useQuery({
