@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons";
 import { Layout, Menu, Button, Modal, Grid, Dropdown } from "antd";
 import { Outlet, useNavigate } from "react-router-dom";
+import { useAuthContext } from "../context/AuthContext";
 
 const { Header, Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -18,9 +19,11 @@ function DashboardLayout() {
 
   const navigate = useNavigate();
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/login");
+  const {logout}=useAuthContext()
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login",{replace:true})
   };
 
   const menuItems = [
@@ -108,7 +111,7 @@ function DashboardLayout() {
               color: "#fff",
               borderRadius: 8,
             }}
-            onClick={() => setOpen(true)}
+            onClick={handleLogout}
           />
         </Header>
 
