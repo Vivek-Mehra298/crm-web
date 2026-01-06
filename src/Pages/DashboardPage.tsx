@@ -7,11 +7,12 @@ import {
 } from "@ant-design/icons";
 import { Pie, Line } from "@ant-design/plots";
 import { type Lead } from "../Types/leadsType";
-import { useLeads } from "../hooks/useLeads";
+import { useLeads } from "../fServices/leads.service";
 
 const DashboardPage: React.FC = () => {
   const { data: leads = [] } = useLeads();
 
+  // ================= KPI COUNTS =================
   const totalLeads = leads.length;
   const newLeads = leads.filter((l) => l.status === "New").length;
   const contactedLeads = leads.filter((l) => l.status === "Contacted").length;
@@ -20,6 +21,7 @@ const DashboardPage: React.FC = () => {
   const statusPercent = (count: number) =>
     totalLeads === 0 ? 0 : Math.round((count / totalLeads) * 100);
 
+  // ================= PIE CHART =================
   const pieConfig = {
     data: [
       { status: "New", value: newLeads },
@@ -29,44 +31,96 @@ const DashboardPage: React.FC = () => {
     angleField: "value",
     colorField: "status",
     radius: 0.8,
+    label: { type: "spider", labelHeight: 28 },
   };
 
+  // ================= LINE CHART =================
+  // Aggregate leads by day
   const leadsGrowthData = leads.reduce<Record<string, number>>((acc, lead) => {
     if (!lead.createdAt) return acc;
-    const key = new Date(lead.createdAt).toISOString().slice(0, 7);
+
+    const createdAt =
+      typeof lead.createdAt === "object" && "toDate" in lead.createdAt
+        ? (lead.createdAt as any).toDate()
+        : new Date(lead.createdAt as any);
+
+    const key = createdAt.toISOString().slice(0, 10); // "YYYY-MM-DD"
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
 
-  let total = 0;
+  let cumulative = 0;
   const lineData = Object.entries(leadsGrowthData)
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
     .map(([date, count]) => {
-      total += count;
-      return { month: date, count: total };
+      cumulative += count;
+      return { date, count: cumulative };
     });
 
   const lineConfig = {
     data: lineData,
-    xField: "month",
+    xField: "date",
     yField: "count",
+    xAxis: {
+      title: { text: "Date" },
+      label: {
+        formatter: (val: string) => {
+          const d = new Date(val);
+          return `${d.getDate()}/${d.getMonth() + 1}`; // DD/MM
+        },
+      },
+    },
+    yAxis: {
+      title: { text: "Total Leads" },
+      min: 0,
+    },
     smooth: true,
-    point: { size: 4 },
+    point: { size: 4, shape: "circle" },
+    tooltip: {
+      formatter: (datum: any) => ({ name: "Leads", value: datum.count }),
+    },
+    lineStyle: { stroke: "#1677ff", lineWidth: 2 },
   };
 
-  const recentLeads = [...leads].sort((a, b) => b.id - a.id).slice(0, 5);
+  // ================= RECENT LEADS =================
+  const recentLeads = [...leads]
+    .sort((a, b) => {
+      const dateA =
+        typeof a.createdAt === "object" && "toDate" in a.createdAt
+          ? (a.createdAt as any).toDate().getTime()
+          : new Date(a.createdAt ?? 0).getTime();
+      const dateB =
+        typeof b.createdAt === "object" && "toDate" in b.createdAt
+          ? (b.createdAt as any).toDate().getTime()
+          : new Date(b.createdAt ?? 0).getTime();
+      return dateB - dateA;
+    })
+    .slice(0, 5);
 
+  // ================= GROWTH CALCULATIONS =================
   const calculateGrowth = (filterFn: (lead: Lead) => boolean) => {
     const now = new Date();
     const thisMonth = now.getMonth();
     const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
 
     const thisMonthCount = leads.filter(
-      (l) => filterFn(l) && new Date(l.createdAt).getMonth() === thisMonth
+      (l) =>
+        filterFn(l) &&
+        new Date(
+          typeof l.createdAt === "object" && "toDate" in l.createdAt
+            ? (l.createdAt as any).toDate()
+            : l.createdAt
+        ).getMonth() === thisMonth
     ).length;
 
     const lastMonthCount = leads.filter(
-      (l) => filterFn(l) && new Date(l.createdAt).getMonth() === lastMonth
+      (l) =>
+        filterFn(l) &&
+        new Date(
+          typeof l.createdAt === "object" && "toDate" in l.createdAt
+            ? (l.createdAt as any).toDate()
+            : l.createdAt
+        ).getMonth() === lastMonth
     ).length;
 
     return lastMonthCount === 0
@@ -78,6 +132,7 @@ const DashboardPage: React.FC = () => {
   const activeGrowth = calculateGrowth((l) => l.status === "Contacted");
   const convertedGrowth = calculateGrowth((l) => l.status === "Converted");
 
+  // ================= RENDER =================
   return (
     <>
       <h2>Dashboard Overview</h2>
@@ -175,5 +230,3 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
-
-

@@ -1,5 +1,5 @@
 {
-  "homepage":"https://github.com/Vivek-Mehra298/crm-web",
+  "homepage": "https://github.com/Vivek-Mehra298/crm-web",
   "name": "my-project",
   "private": true,
   "version": "0.0.0",
@@ -17,7 +17,7 @@
     "@tanstack/react-query": "^5.90.12",
     "@types/react-router": "^5.1.20",
     "antd": "^6.1.0",
-    "axios": "^1.13.2",
+    "firebase": "^12.7.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.10.1"

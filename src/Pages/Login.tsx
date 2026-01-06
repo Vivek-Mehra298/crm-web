@@ -1,9 +1,8 @@
 import { Button, Card, Input, Typography, Space } from "antd";
-import { MailOutlined, LockOutlined, LoginOutlined } from "@ant-design/icons";
-import { useLogin } from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../context/AuthContext";
+import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const { Title, Text } = Typography;
 
@@ -11,55 +10,44 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { mutateAsync  } = useLogin();
-  const { login } = useAuthContext();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-      const user = await mutateAsync({ email, password });
-      login(user);
-      navigate("/");
-    } catch (err) {
-      alert("Invalid email or password");
+      await login(email, password);
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#f0f2f5" }}>
-      <Card style={{ width: 360, borderRadius: 12 }}>
+      <Card style={{ width: 380, borderRadius: 12 }}>
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          <Title level={3} style={{ textAlign: "center" }}>Welcome Back </Title>
-          <Text type="secondary" style={{ textAlign: "center", display: "block" }}>
-            Login to continue to My CRM
-          </Text>
+          <Title level={3} style={{ textAlign: "center" }}>Login</Title>
 
           <Input
             size="large"
-            prefix={<MailOutlined />}
             placeholder="Email"
+            prefix={<UserOutlined />}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <Input.Password
             size="large"
-            prefix={<LockOutlined />}
             placeholder="Password"
+            prefix={<LockOutlined />}
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Button
-            type="primary"
-            size="large"
-            icon={<LoginOutlined />}
-            block
-            onClick={handleLogin}
-          >
+          <Button type="primary" size="large" block onClick={handleLogin}>
             Login
           </Button>
 
           <Text style={{ textAlign: "center" }}>
-            If you haven't an account?{" "}
+            Don't have an account?{" "}
             <Button type="link" onClick={() => navigate("/signup")}>
               Sign up
             </Button>
@@ -69,6 +57,3 @@ export default function Login() {
     </div>
   );
 }
-
-
-

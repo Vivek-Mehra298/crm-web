@@ -7,7 +7,7 @@ import {
 } from "@ant-design/icons";
 import { Layout, Menu, Button, Modal, Grid, Dropdown } from "antd";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useAuthContext } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 const { Header, Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -19,11 +19,11 @@ function DashboardLayout() {
 
   const navigate = useNavigate();
 
-  const {logout}=useAuthContext()
+  const { logout } = useAuth();
 
   const handleLogout = () => {
     logout();
-    navigate("/login",{replace:true})
+    navigate("/login", { replace: true });
   };
 
   const menuItems = [
@@ -111,7 +111,7 @@ function DashboardLayout() {
               color: "#fff",
               borderRadius: 8,
             }}
-            onClick={handleLogout}
+            onClick={()=>setOpen(true)}
           />
         </Header>
 
@@ -125,7 +125,7 @@ function DashboardLayout() {
       <Modal
         title="Confirm Logout"
         open={open}
-        onOk={logout}
+        onOk={handleLogout}
         onCancel={() => setOpen(false)}
         okText="Yes"
         cancelText="No"

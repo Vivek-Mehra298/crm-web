@@ -21,7 +21,7 @@ import {
   useAddLead,
   useDeleteLead,
   useUpdateLead,
-} from "../hooks/useLeads";
+} from "../fServices/leads.service";
 
 const { Option } = Select;
 const { useBreakpoint } = Grid;
@@ -30,7 +30,7 @@ const LeadsPage = () => {
   const screens = useBreakpoint();
   const [search, setSearch] = useState("");
 
-  // for leads data and mutations
+  // 🔥 Firebase hooks
   const { data: leads = [], isLoading } = useLeads();
   const addLead = useAddLead();
   const updateLead = useUpdateLead();
@@ -38,59 +38,51 @@ const LeadsPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
-  const [form] = Form.useForm(); //form instance
+  const [form] = Form.useForm();
 
-  //open modal
   const openModal = () => {
     setEditingLead(null);
     form.resetFields();
     setIsModalOpen(true);
   };
 
-  //open modal for edit
   const openEditModal = (lead: Lead) => {
     setEditingLead(lead);
     form.setFieldsValue(lead);
     setIsModalOpen(true);
   };
 
-  //close modal
-  const closModal = () => {
+  const closeModal = () => {
     form.resetFields();
     setIsModalOpen(false);
   };
 
-  // Handle form submission for adding/editing lead
   const onFinish = (values: Omit<Lead, "id">) => {
-    if (editingLead) {
-      // Edit
+    if (editingLead?.id) {
       updateLead.mutate(
-        { ...editingLead, ...values },
+        { id: editingLead.id, data: values },
         {
           onSuccess: () => {
             message.success("Lead updated successfully");
-            closModal();
+            closeModal();
           },
         }
       );
     } else {
-      // Add
-      addLead.mutate(values, {
-        onSuccess: () => {
-          message.success("Lead added successfully");
-          closModal();
-        },
-      });
+      addLead.mutate(
+        { ...values, createdAt: Date.now() },
+        {
+          onSuccess: () => {
+            message.success("Lead added successfully");
+            closeModal();
+          },
+        }
+      );
     }
-
-    // Close modal and reset form
-    // setIsModalOpen(false);
-    // setEditingLead(null);
-    // form.resetFields();
   };
 
-  // Delete lead
-  const handleDelete = (id: number) => {
+  const handleDelete = (id?: string) => {
+    if (!id) return;
     deleteLead.mutate(id, {
       onSuccess: () => message.success("Lead deleted successfully"),
     });
@@ -135,8 +127,7 @@ const LeadsPage = () => {
     },
   ];
 
-  // for serach functionality and crud operations
-  const filterdLeads = leads.filter(
+  const filteredLeads = leads.filter(
     (lead) =>
       lead.name.toLowerCase().includes(search.toLowerCase()) ||
       lead.email.toLowerCase().includes(search.toLowerCase())
@@ -151,7 +142,13 @@ const LeadsPage = () => {
         </Col>
 
         <Col xs={24} md={12} style={{ textAlign: screens.md ? "right" : "left" }}>
-          <Space wrap style={{ width: "100%", justifyContent: screens.md ? "flex-end" : "flex-start" }}>
+          <Space
+            wrap
+            style={{
+              width: "100%",
+              justifyContent: screens.md ? "flex-end" : "flex-start",
+            }}
+          >
             <Input.Search
               placeholder="Search by name or email"
               allowClear
@@ -165,9 +162,9 @@ const LeadsPage = () => {
         </Col>
       </Row>
 
-      {/* Leads Table */}
+      {/* Table */}
       <Table
-        dataSource={filterdLeads}
+        dataSource={filteredLeads}
         columns={columns}
         loading={isLoading}
         rowKey="id"
@@ -175,11 +172,11 @@ const LeadsPage = () => {
         scroll={{ x: "max-content" }}
       />
 
-      {/* Add Lead Modal */}
+      {/* Modal */}
       <Modal
-        title="Add New Lead"
+        title={editingLead ? "Update Lead" : "Add New Lead"}
         open={isModalOpen}
-        onCancel={closModal}
+        onCancel={closeModal}
         onOk={() => form.submit()}
         okText={editingLead ? "Update Lead" : "Add Lead"}
         width={screens.xs ? "100%" : 520}
