@@ -23,12 +23,12 @@ function DashboardLayout() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   };
 
   const menuItems = [
-    { key: "/", icon: <DashboardOutlined />, label: "Dashboard" },
-    { key: "/leads", icon: <TeamOutlined />, label: "Leads" },
+    { key: "/app", icon: <DashboardOutlined />, label: "Dashboard" },
+    { key: "/app/leads", icon: <TeamOutlined />, label: "Leads" },
   ];
 
   const dropdownMenu = {
@@ -130,7 +130,7 @@ function DashboardLayout() {
         okText="Yes"
         cancelText="No"
       >
-        Are you sure you want to logout?
+        Are you sure you want to leave or logout?
       </Modal>
     </Layout>
   );
