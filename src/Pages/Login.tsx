@@ -16,7 +16,7 @@ export default function Login() {
   const handleLogin = async () => {
     try {
       await login(email, password);
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
     } catch (err: any) {
       alert(err.message);
     }
