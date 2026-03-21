@@ -22,6 +22,8 @@ import {
   useDeleteLead,
   useUpdateLead,
 } from "../fServices/leads.service";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const { Option } = Select;
 const { useBreakpoint } = Grid;
@@ -29,6 +31,8 @@ const { useBreakpoint } = Grid;
 const LeadsPage = () => {
   const screens = useBreakpoint();
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   // 🔥 Firebase hooks
   const { data: leads = [], isLoading } = useLeads();
@@ -41,12 +45,14 @@ const LeadsPage = () => {
   const [form] = Form.useForm();
 
   const openModal = () => {
+    if (!user) return navigate("/login");
     setEditingLead(null);
     form.resetFields();
     setIsModalOpen(true);
   };
 
   const openEditModal = (lead: Lead) => {
+    if (!user) return navigate("/login");
     setEditingLead(lead);
     form.setFieldsValue(lead);
     setIsModalOpen(true);
@@ -113,15 +119,21 @@ const LeadsPage = () => {
           <Button type="link" onClick={() => openEditModal(record)}>
             Edit
           </Button>
-          <Popconfirm
-            title="Delete Lead"
-            description="Are you sure to delete this lead?"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <Button type="link" danger>
+          {user ? (
+            <Popconfirm
+              title="Delete Lead"
+              description="Are you sure to delete this lead?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <Button type="link" danger>
+                Delete
+              </Button>
+            </Popconfirm>
+          ) : (
+            <Button type="link" danger onClick={() => navigate("/login")}>
               Delete
             </Button>
-          </Popconfirm>
+          )}
         </Space>
       ),
     },
